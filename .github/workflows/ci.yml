@@ -1,0 +1,25 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: alpine
+
+    steps:
+      - name: Install dependencies
+        shell: sh
+        run: apk add alpine-sdk git libnl3-dev linux-headers
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Compile
+        shell: sh
+        run: |
+          cp config hostap/hostapd/.config
+          cd hostap/hostapd
+          make -j$(nproc)
