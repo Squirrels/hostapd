@@ -1,0 +1,134 @@
+From fddb2e4141721f305de8a5f7191d9db576bf84e4 Mon Sep 17 00:00:00 2001
+From: Sam Edwards <CFSworks@gmail.com>
+Date: Sun, 21 Feb 2021 14:09:13 -0700
+Subject: [PATCH] CCMP: Add a "static_ccmp_key" configuration option
+
+This is incompatible with WEP/WPA, but it results in an open
+network that employs CCMP in a "static" manner (kind of like WEP),
+i.e. with a fixed key set at configuration time.
+
+It's most likely extremely easy to cryptanalyze; change the key
+often and don't use it for any network that you really, really
+care about!
+---
+ hostapd/config_file.c | 10 ++++++++++
+ src/ap/ap_config.c    |  9 +++++++++
+ src/ap/ap_config.h    |  3 +++
+ src/ap/hostapd.c      | 11 +++++++++++
+ src/ap/ieee802_11.c   | 16 ++++++++++++++++
+ 5 files changed, 49 insertions(+)
+
+diff --git a/hostapd/config_file.c b/hostapd/config_file.c
+index e09e6e141..6cb1a3945 100644
+--- a/hostapd/config_file.c
++++ b/hostapd/config_file.c
+@@ -2868,6 +2868,16 @@ static int hostapd_config_fill(struct hostapd_config *conf,
+ 				   line, bss->max_num_sta, MAX_STA_COUNT);
+ 			return 1;
+ 		}
++	} else if (os_strcmp(buf, "static_ccmp_key") == 0) {
++		size_t len = os_strlen(pos);
++
++		if (len != 2 * sizeof(bss->static_ccmp_key) ||
++		    hexstr2bin(pos, bss->static_ccmp_key, len / 2)) {
++			wpa_printf(MSG_ERROR, "Line %d: Invalid CCMP key '%s'.",
++				   line, pos);
++			return 1;
++		}
++		bss->static_ccmp_key_len = len / 2;
+ 	} else if (os_strcmp(buf, "wpa") == 0) {
+ 		bss->wpa = atoi(pos);
+ 	} else if (os_strcmp(buf, "wpa_group_rekey") == 0) {
+diff --git a/src/ap/ap_config.c b/src/ap/ap_config.c
+index 90348e1dd..c9913e001 100644
+--- a/src/ap/ap_config.c
++++ b/src/ap/ap_config.c
+@@ -1038,6 +1038,15 @@ static int hostapd_config_check_bss(struct hostapd_bss_config *bss,
+ 		return -1;
+ 	}
+ 
++	if (bss->static_ccmp_key_len &&
++	    (bss->wpa || (bss->default_wep_key_len ||
++			  bss->default_wep_key_len ||
++			  bss->ssid.wep.keys_set))) {
++		wpa_printf(MSG_ERROR,
++			   "Static CCMP key unsupported with WEP/WPA");
++		return -1;
++	}
++
+ 	if (bss->wpa) {
+ 		int wep, i;
+ 
+diff --git a/src/ap/ap_config.h b/src/ap/ap_config.h
+index ea581a822..55c39b016 100644
+--- a/src/ap/ap_config.h
++++ b/src/ap/ap_config.h
+@@ -345,6 +345,9 @@ struct hostapd_bss_config {
+ 	int auth_algs; /* bitfield of allowed IEEE 802.11 authentication
+ 			* algorithms, WPA_AUTH_ALG_{OPEN,SHARED,LEAP} */
+ 
++	unsigned char static_ccmp_key[16];
++	size_t static_ccmp_key_len;
++
+ 	int wpa; /* bitfield of WPA_PROTO_WPA, WPA_PROTO_RSN */
+ 	int wpa_key_mgmt;
+ #ifdef CONFIG_IEEE80211W
+diff --git a/src/ap/hostapd.c b/src/ap/hostapd.c
+index bf1975fbd..d3ea91845 100644
+--- a/src/ap/hostapd.c
++++ b/src/ap/hostapd.c
+@@ -1167,6 +1167,17 @@ static int hostapd_setup_bss(struct hostapd_data *hapd, int first)
+ 	if (hostapd_setup_encryption(conf->iface, hapd))
+ 		return -1;
+ 
++	if (conf->static_ccmp_key_len) {
++		unsigned char seq[6];
++		os_memset(seq, 0, sizeof(seq));
++
++		hostapd_drv_set_key(conf->iface, hapd, WPA_ALG_CCMP,
++				    broadcast_ether_addr, 0, 1,
++				    seq, sizeof(seq),
++				    conf->static_ccmp_key,
++				    conf->static_ccmp_key_len);
++	}
++
+ 	/*
+ 	 * Fetch the SSID from the system and use it or,
+ 	 * if one was specified in the config file, verify they
+diff --git a/src/ap/ieee802_11.c b/src/ap/ieee802_11.c
+index c85a28db4..85587b341 100644
+--- a/src/ap/ieee802_11.c
++++ b/src/ap/ieee802_11.c
+@@ -208,6 +208,9 @@ u16 hostapd_own_capab_info(struct hostapd_data *hapd)
+ 		privacy = 1;
+ #endif /* CONFIG_HS20 */
+ 
++	if (hapd->conf->static_ccmp_key_len)
++		privacy = 1;
++
+ 	if (privacy)
+ 		capab |= WLAN_CAPABILITY_PRIVACY;
+ 
+@@ -4897,6 +4900,19 @@ static void handle_assoc_cb(struct hostapd_data *hapd,
+ 			hostapd_set_wds_encryption(hapd, sta, ifname_wds);
+ 	}
+ 
++	if (hapd->conf->static_ccmp_key_len) {
++		unsigned char seq[6];
++		os_memset(seq, 0, sizeof(seq));
++
++		for (int i = 0; i < 2; i++) {
++			hostapd_drv_set_key(hapd->conf->iface, hapd,
++					    WPA_ALG_CCMP, sta->addr, i,
++					    i == 0, seq, sizeof(seq),
++					    hapd->conf->static_ccmp_key,
++					    hapd->conf->static_ccmp_key_len);
++		}
++	}
++
+ 	if (sta->auth_alg == WLAN_AUTH_FT)
+ 		wpa_auth_sm_event(sta->wpa_sm, WPA_ASSOC_FT);
+ 	else
+-- 
+2.26.2
+

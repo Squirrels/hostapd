@@ -17,6 +17,12 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Patch
+        shell: sh
+        run: |
+          cd hostap
+          cat ../patches/*.patch | patch -tup1
+
       - name: Compile
         shell: sh
         run: |
