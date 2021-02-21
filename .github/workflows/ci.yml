@@ -23,3 +23,11 @@ jobs:
           cp config hostap/hostapd/.config
           cd hostap/hostapd
           make -j$(nproc)
+          strip hostapd
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: bin-alpine-x86_64
+          path: hostap/hostapd/hostapd
+          retention-days: 7
