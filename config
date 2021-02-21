@@ -45,40 +45,40 @@ CONFIG_LIBNL32=y
 #CONFIG_DRIVER_NONE=y
 
 # IEEE 802.11F/IAPP
-CONFIG_IAPP=y
+#CONFIG_IAPP=y
 
 # WPA2/IEEE 802.11i RSN pre-authentication
-CONFIG_RSN_PREAUTH=y
+#CONFIG_RSN_PREAUTH=y
 
 # IEEE 802.11w (management frame protection)
-CONFIG_IEEE80211W=y
+#CONFIG_IEEE80211W=y
 
 # Support Operating Channel Validation
 #CONFIG_OCV=y
 
 # Integrated EAP server
-CONFIG_EAP=y
+#CONFIG_EAP=y
 
 # EAP Re-authentication Protocol (ERP) in integrated EAP server
-CONFIG_ERP=y
+#CONFIG_ERP=y
 
 # EAP-MD5 for the integrated EAP server
-CONFIG_EAP_MD5=y
+#CONFIG_EAP_MD5=y
 
 # EAP-TLS for the integrated EAP server
-CONFIG_EAP_TLS=y
+#CONFIG_EAP_TLS=y
 
 # EAP-MSCHAPv2 for the integrated EAP server
-CONFIG_EAP_MSCHAPV2=y
+#CONFIG_EAP_MSCHAPV2=y
 
 # EAP-PEAP for the integrated EAP server
-CONFIG_EAP_PEAP=y
+#CONFIG_EAP_PEAP=y
 
 # EAP-GTC for the integrated EAP server
-CONFIG_EAP_GTC=y
+#CONFIG_EAP_GTC=y
 
 # EAP-TTLS for the integrated EAP server
-CONFIG_EAP_TTLS=y
+#CONFIG_EAP_TTLS=y
 
 # EAP-SIM for the integrated EAP server
 #CONFIG_EAP_SIM=y
@@ -138,14 +138,14 @@ CONFIG_EAP_TTLS=y
 
 # PKCS#12 (PFX) support (used to read private key and certificate file from
 # a file that usually has extension .p12 or .pfx)
-CONFIG_PKCS12=y
+#CONFIG_PKCS12=y
 
 # RADIUS authentication server. This provides access to the integrated EAP
 # server from external hosts using RADIUS.
 #CONFIG_RADIUS_SERVER=y
 
 # Build IPv6 support for RADIUS operations
-CONFIG_IPV6=y
+#CONFIG_IPV6=y
 
 # IEEE Std 802.11r-2008 (Fast BSS Transition)
 #CONFIG_IEEE80211R=y
@@ -189,13 +189,13 @@ CONFIG_IPV6=y
 #CONFIG_DEBUG_LINUX_TRACING=y
 
 # Remove support for RADIUS accounting
-#CONFIG_NO_ACCOUNTING=y
+CONFIG_NO_ACCOUNTING=y
 
 # Remove support for RADIUS
-#CONFIG_NO_RADIUS=y
+CONFIG_NO_RADIUS=y
 
 # Remove support for VLANs
-#CONFIG_NO_VLAN=y
+CONFIG_NO_VLAN=y
 
 # Enable support for fully dynamic VLANs. This enables hostapd to
 # automatically create bridge and VLAN interfaces if necessary.
@@ -257,7 +257,7 @@ CONFIG_IPV6=y
 # This will save some in binary size and CPU use. However, this should only be
 # considered for builds that are known to be used on devices that meet the
 # requirements described above.
-#CONFIG_NO_RANDOM_POOL=y
+CONFIG_NO_RANDOM_POOL=y
 
 # Should we attempt to use the getrandom(2) call that provides more reliable
 # yet secure randomness source than /dev/random on Linux 3.17 and newer.
@@ -279,7 +279,7 @@ CONFIG_IPV6=y
 # internal = Internal TLSv1 implementation (experimental)
 # linux = Linux kernel AF_ALG and internal TLSv1 implementation (experimental)
 # none = Empty template
-#CONFIG_TLS=openssl
+CONFIG_TLS=linux
 
 # TLS-based EAP methods require at least TLS v1.0. Newer version of TLS (v1.1)
 # can be enabled to get a stronger construction of messages when block ciphers
@@ -357,7 +357,7 @@ CONFIG_IPV6=y
 # For more details refer to:
 # http://wireless.kernel.org/en/users/Documentation/acs
 #
-#CONFIG_ACS=y
+CONFIG_ACS=y
 
 # Multiband Operation support
 # These extentions facilitate efficient use of multiple frequency bands
